@@ -136,7 +136,7 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: "543c55bdf196fba448a3cd4629322420e6d0c910"
+      resolved-ref: "8bdaaa55800e7579d6a7ff6b871b05bd75968218"
       url: "https://github.com/BlacMeW/mini_app.git"
     source: git
     version: "0.0.1"
