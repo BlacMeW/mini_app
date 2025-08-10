@@ -1,7 +1,7 @@
 name: mini_app
 description: "A new Flutter package project."
 version: 0.0.1
-homepage:
+homepage: https://github.com/BlacMeW/mini_app.git
 
 environment:
   sdk: ^3.8.1
