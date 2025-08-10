@@ -24,8 +24,11 @@ class RegisterUserWidget extends StatefulWidget {
 
 class RegisterUserWidgetState extends State<RegisterUserWidget> {
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _creditController = TextEditingController();
+  final TextEditingController creditController = TextEditingController();
   final List<User> _users = <User>[];
+
+  /// Expose the user list for external access (read-only)
+  List<User> get users => List.unmodifiable(_users);
 
   int get totalCreditPoints =>
       _users.fold<int>(0, (sum, user) => sum + user.creditPoints);
@@ -47,12 +50,13 @@ class RegisterUserWidgetState extends State<RegisterUserWidget> {
     });
   }
 
-  void _addCreditPoint(int index) {
-    final credit = int.tryParse(_creditController.text) ?? 0;
+  /// Add credit points to a user at [index] using the value in [creditController]
+  void addCreditPoint(int index) {
+    final credit = int.tryParse(creditController.text) ?? 0;
     if (credit > 0) {
       setState(() {
         _users[index].creditPoints += credit;
-        _creditController.clear();
+        creditController.clear();
       });
     }
   }
@@ -88,7 +92,7 @@ class RegisterUserWidgetState extends State<RegisterUserWidget> {
                       children: [
                         Expanded(
                           child: TextField(
-                            controller: _creditController,
+                            controller: creditController,
                             keyboardType: TextInputType.number,
                             decoration: const InputDecoration(
                               hintText: '+Points',
@@ -97,7 +101,7 @@ class RegisterUserWidgetState extends State<RegisterUserWidget> {
                         ),
                         IconButton(
                           icon: const Icon(Icons.add),
-                          onPressed: () => _addCreditPoint(index),
+                          onPressed: () => addCreditPoint(index),
                         ),
                       ],
                     ),
