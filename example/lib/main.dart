@@ -1,23 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:mini_app/user_credit.dart';
+import 'dart:math';
 
 void main() => runApp(const DemoApp());
 
-class DemoApp extends StatelessWidget {
+class DemoApp extends StatefulWidget {
   const DemoApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final GlobalKey<RegisterUserWidgetState> userKey =
-        GlobalKey<RegisterUserWidgetState>();
-    final TextEditingController addUserNameController = TextEditingController();
-    final TextEditingController addUserCreditController =
-        TextEditingController();
-    final TextEditingController addCreditIndexController =
-        TextEditingController();
-    final TextEditingController addCreditValueController =
-        TextEditingController();
+  State<DemoApp> createState() => _DemoAppState();
+}
 
+class _DemoAppState extends State<DemoApp> {
+  final GlobalKey<RegisterUserWidgetState> userKey =
+      GlobalKey<RegisterUserWidgetState>();
+  final TextEditingController addUserNameController = TextEditingController();
+  final TextEditingController addUserCreditController = TextEditingController();
+  final TextEditingController addCreditIndexController =
+      TextEditingController();
+  final TextEditingController addCreditValueController =
+      TextEditingController();
+  final TextEditingController getUserIdController = TextEditingController();
+  String userInfoResult = '';
+
+  @override
+  Widget build(BuildContext context) {
     return MaterialApp(
       title: 'User Registration Demo',
       home: Scaffold(
@@ -32,7 +39,11 @@ class DemoApp extends StatelessWidget {
                   padding: EdgeInsets.only(bottom: 8.0),
                   child: Text(
                     'Mini App Function',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
+                    ),
                   ),
                 ),
               ),
@@ -62,8 +73,16 @@ class DemoApp extends StatelessWidget {
                       final credit =
                           int.tryParse(addUserCreditController.text) ?? 0;
                       if (name.isNotEmpty) {
+                        final random = Random();
+                        final randomUserId =
+                            1000 +
+                            random.nextInt(9000); // Random ID between 1000-9999
                         userKey.currentState?.addUser(
-                          User(name: name, creditPoints: credit),
+                          User(
+                            name: name,
+                            userid: randomUserId,
+                            creditPoints: credit,
+                          ),
                         );
                         addUserNameController.clear();
                         addUserCreditController.clear();
@@ -116,13 +135,66 @@ class DemoApp extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
+              // UI to get user by ID
+              Row(
+                children: [
+                  SizedBox(
+                    width: 120,
+                    child: TextField(
+                      controller: getUserIdController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: 'User ID'),
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      final userId =
+                          int.tryParse(getUserIdController.text) ?? -1;
+                      if (userId > 0 && userKey.currentState != null) {
+                        final user = userKey.currentState!.getUserInfoByUserId(
+                          userId,
+                        );
+                        setState(() {
+                          if (user != null) {
+                            userInfoResult =
+                                'Found: ${user.name} (ID: ${user.userid}) - ${user.creditPoints} points';
+                          } else {
+                            userInfoResult = 'User with ID $userId not found';
+                          }
+                        });
+                      }
+                    },
+                    child: const Text('Get User Info'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (userInfoResult.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    userInfoResult,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+              const SizedBox(height: 16),
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Padding(
                   padding: EdgeInsets.only(bottom: 8.0),
                   child: Text(
                     'Mini App UI',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ),
                   ),
                 ),
               ),

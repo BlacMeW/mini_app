@@ -32,9 +32,7 @@ dependencies:
     sdk: flutter
 
   mini_app:
-    git:
-      url: https://github.com/BlacMeW/mini_app.git
-      ref: main
+    path : ../
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

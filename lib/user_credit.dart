@@ -1,18 +1,29 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
 
 /// Registers a new user and returns the created User object.
-User registerUser(String name, {int creditPoints = 0}) {
+User registerUser(String name, {int creditPoints = 0, int userid = 0}) {
   if (name.trim().isEmpty) {
     throw ArgumentError('User name cannot be empty');
   }
-  return User(name: name.trim(), creditPoints: creditPoints);
+  return User(name: name.trim(), creditPoints: creditPoints, userid: userid);
+}
+
+/// Get user info by userid from a list of users - returns null if user not found
+User? getUserInfoByUserId(List<User> userList, int userid) {
+  try {
+    return userList.firstWhere((user) => user.userid == userid);
+  } catch (e) {
+    return null; // User not found
+  }
 }
 
 /// User model for registration and credit points
 class User {
   final String name;
+  final int userid;
   int creditPoints;
-  User({required this.name, this.creditPoints = 0});
+  User({required this.name, required this.userid, this.creditPoints = 0});
 }
 
 class RegisterUserWidget extends StatefulWidget {
@@ -25,7 +36,13 @@ class RegisterUserWidget extends StatefulWidget {
 class RegisterUserWidgetState extends State<RegisterUserWidget> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController creditController = TextEditingController();
-  final List<User> _users = <User>[];
+  final List<User> _users = <User>[
+    User(name: "Alice Johnson", userid: 1, creditPoints: 100),
+    User(name: "Bob Smith", userid: 2, creditPoints: 250),
+    User(name: "Carol Brown", userid: 3, creditPoints: 75),
+    User(name: "David Wilson", userid: 4, creditPoints: 150),
+    User(name: "Emma Davis", userid: 5, creditPoints: 320),
+  ];
 
   /// Expose the user list for external access (read-only)
   List<User> get users => List.unmodifiable(_users);
@@ -37,7 +54,10 @@ class RegisterUserWidgetState extends State<RegisterUserWidget> {
     final name = _nameController.text.trim();
     if (name.isNotEmpty) {
       setState(() {
-        _users.add(User(name: name));
+        final random = Random();
+        final randomUserId =
+            1000 + random.nextInt(9000); // Random ID between 1000-9999
+        _users.add(User(name: name, userid: randomUserId));
         _nameController.clear();
       });
     }
@@ -58,6 +78,15 @@ class RegisterUserWidgetState extends State<RegisterUserWidget> {
         _users[index].creditPoints += credit;
         creditController.clear();
       });
+    }
+  }
+
+  /// Get user info by userid - returns null if user not found
+  User? getUserInfoByUserId(int userid) {
+    try {
+      return _users.firstWhere((user) => user.userid == userid);
+    } catch (e) {
+      return null; // User not found
     }
   }
 
@@ -84,7 +113,7 @@ class RegisterUserWidgetState extends State<RegisterUserWidget> {
               final user = _users[index];
               return Card(
                 child: ListTile(
-                  title: Text(user.name),
+                  title: Text('${user.name} (ID: ${user.userid})'),
                   subtitle: Text('Credit Points: ${user.creditPoints}'),
                   trailing: SizedBox(
                     width: 120,

@@ -134,11 +134,9 @@ packages:
   mini_app:
     dependency: "direct main"
     description:
-      path: "."
-      ref: main
-      resolved-ref: "8bdaaa55800e7579d6a7ff6b871b05bd75968218"
-      url: "https://github.com/BlacMeW/mini_app.git"
-    source: git
+      path: ".."
+      relative: true
+    source: path
     version: "0.0.1"
   path:
     dependency: transitive
