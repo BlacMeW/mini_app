@@ -7,6 +7,7 @@ A Flutter library for user registration and credit point management with both pr
 - ✅ User registration with random ID generation
 - ✅ Credit point management system
 - ✅ User search by ID functionality
+- ✅ JWT Token management with setToken() function
 - ✅ Pre-built Flutter UI widgets
 - ✅ Predefined sample users for testing
 - ✅ Comprehensive error handling
@@ -52,11 +53,33 @@ class MyApp extends StatelessWidget {
 // Create a user
 final user = registerUser("John Doe", creditPoints: 100, userid: 1234);
 
+// Set JWT token
+user.setToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...");
+print('Token set: ${user.hasToken}'); // true
+
 // Search for user
 final userList = [/* your users */];
 final foundUser = getUserInfoByUserId(userList, 1234);
 if (foundUser != null) {
   print('Found: ${foundUser.name}');
+  print('Has token: ${foundUser.hasToken}');
+}
+
+// Timer-based token refresh (every hour)
+Timer.periodic(Duration(hours: 1), (timer) {
+  for (final user in userList) {
+    final newToken = fetchTokenFromAuthService(user.userid);
+    user.setToken(newToken);
+  }
+});
+
+// Refresh token for specific user (user[0])
+void refreshFirstUserToken() {
+  if (userList.isNotEmpty) {
+    final newToken = fetchTokenFromAuthService(userList[0].userid);
+    userList[0].setToken(newToken);
+    print('Refreshed token for first user: ${userList[0].name}');
+  }
 }
 ```
 
@@ -69,16 +92,22 @@ if (foundUser != null) {
 ## API Overview
 
 ### Core Classes
-- `User` - User model with name, userid, and creditPoints
+- `User` - User model with name, userid, creditPoints, and JWT token support
 - `RegisterUserWidget` - Complete UI widget for user management
 
 ### Functions
 - `registerUser()` - Create new users with validation
 - `getUserInfoByUserId()` - Search users by ID
 
+### User Methods
+- `setToken(String jwtToken)` - Set JWT token for the user
+- `get token` - Get the current JWT token
+- `get hasToken` - Check if user has a token set
+
 ### Widget Methods (via GlobalKey)
 - `addUser()` - Add users programmatically
 - `addCreditPoint()` - Manage credit points
+- `refreshOneUserToken()` - Refresh JWT token for user[0] only
 - `getUserInfoByUserId()` - Search within widget
 - `users` - Access user list
 - `totalCreditPoints` - Get total credits
@@ -126,6 +155,32 @@ const like = 'sample';
 
 ## Additional information
 
-TODO: Tell users more about the package: where to find more information, how to
-contribute to the package, how to file issues, what response they can expect
-from the package authors, and more.
+This library provides sample code for JWT token management patterns. For production use, integrate with Firebase Authentication or your preferred authentication service.
+
+### 🔥 Firebase JWT Integration
+
+This mini app is designed to work with **Firebase JWT Tokens** for production environments:
+
+```dart
+// Production example with Firebase
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:mini_app/user_credit.dart';
+
+Future<void> setFirebaseToken(User user) async {
+  final firebaseUser = FirebaseAuth.instance.currentUser;
+  if (firebaseUser != null) {
+    final idToken = await firebaseUser.getIdToken();
+    user.setToken(idToken);
+  }
+}
+```
+
+### ⚠️ Important Note
+
+**The token examples in this library are for demonstration purposes only.** In production:
+- Use actual Firebase JWT tokens from Firebase Authentication
+- Implement proper token validation and security measures  
+- Follow JWT security best practices
+- Never log actual token values
+
+For complete documentation and Firebase integration examples, see [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md).

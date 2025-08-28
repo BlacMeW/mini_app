@@ -1,116 +1,87 @@
-import 'package:flutter/material.dart';
-import 'package:mini_app/user_credit.dart';
+import 'dart:async';
+import 'dart:math';
+import 'lib/user_credit.dart';
 
-void main() => runApp(const DemoApp());
+void main() {
+  print('=== Mini App User Credit Example ===\n');
 
-class DemoApp extends StatelessWidget {
-  const DemoApp({super.key});
+  // Create some users
+  final users = <User>[
+    registerUser('Alice Johnson', creditPoints: 100, userid: 1),
+    registerUser('Bob Smith', creditPoints: 250, userid: 2),
+    registerUser('Carol Brown', creditPoints: 75, userid: 3),
+  ];
 
-  @override
-  Widget build(BuildContext context) {
-    final GlobalKey<RegisterUserWidgetState> userKey =
-        GlobalKey<RegisterUserWidgetState>();
-    final TextEditingController addUserNameController = TextEditingController();
-    final TextEditingController addUserCreditController =
-        TextEditingController();
-    final TextEditingController addCreditIndexController =
-        TextEditingController();
-    final TextEditingController addCreditValueController =
-        TextEditingController();
-
-    return MaterialApp(
-      title: 'User Registration Demo',
-      home: Scaffold(
-        appBar: AppBar(title: const Text('User Registration Demo')),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              // UI to call addUser
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: addUserNameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Add User Name',
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  SizedBox(
-                    width: 80,
-                    child: TextField(
-                      controller: addUserCreditController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Credit'),
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      final name = addUserNameController.text.trim();
-                      final credit =
-                          int.tryParse(addUserCreditController.text) ?? 0;
-                      if (name.isNotEmpty) {
-                        userKey.currentState?.addUser(
-                          User(name: name, creditPoints: credit),
-                        );
-                        addUserNameController.clear();
-                        addUserCreditController.clear();
-                      }
-                    },
-                    child: const Text('Add User'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              // UI to call _addCreditPoint
-              Row(
-                children: [
-                  SizedBox(
-                    width: 80,
-                    child: TextField(
-                      controller: addCreditIndexController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'User #'),
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  SizedBox(
-                    width: 80,
-                    child: TextField(
-                      controller: addCreditValueController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Points'),
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      final idx =
-                          int.tryParse(addCreditIndexController.text) ?? -1;
-                      final val =
-                          int.tryParse(addCreditValueController.text) ?? 0;
-                      if (idx >= 0 && val > 0 && userKey.currentState != null) {
-                        final users = userKey.currentState!.users;
-                        if (idx < users.length) {
-                          userKey.currentState!.creditController.text = val
-                              .toString();
-                          userKey.currentState!.addCreditPoint(idx);
-                        }
-                        addCreditIndexController.clear();
-                        addCreditValueController.clear();
-                      }
-                    },
-                    child: const Text('Add Credit'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Expanded(child: RegisterUserWidget(key: userKey)),
-            ],
-          ),
-        ),
-      ),
+  print('Initial users:');
+  for (final user in users) {
+    print(
+      '- ${user.name} (ID: ${user.userid}): ${user.creditPoints} points, Token: ${user.hasToken ? "Set" : "None"}',
     );
   }
+
+  // Set initial tokens for users
+  print('\n=== Setting initial JWT tokens ===');
+  for (int i = 0; i < users.length; i++) {
+    final token = generateMockJwtToken();
+    users[i].setToken(token);
+    print('Set token for ${users[i].name}: ${token.substring(0, 20)}...');
+  }
+
+  print('\nUsers after setting tokens:');
+  for (final user in users) {
+    print(
+      '- ${user.name}: Token status = ${user.hasToken ? "Active" : "None"}',
+    );
+  }
+
+  // Start timer to refresh tokens every hour (for demo, we'll use 10 seconds)
+  print('\n=== Starting token refresh timer (every 10 seconds for demo) ===');
+  print('In production, this would be every 1 hour using Duration(hours: 1)');
+
+  Timer.periodic(Duration(seconds: 10), (timer) {
+    print('\n--- Token refresh at ${DateTime.now()} ---');
+
+    for (final user in users) {
+      final newToken = generateMockJwtToken();
+      user.setToken(newToken);
+      print(
+        'Refreshed token for ${user.name}: ${newToken.substring(0, 20)}...',
+      );
+    }
+
+    // Stop after 3 refreshes for demo
+    if (timer.tick >= 3) {
+      print('\nDemo completed. Token refresh timer stopped.');
+      timer.cancel();
+      return;
+    }
+  });
+
+  // Keep the program running
+  print(
+    '\nProgram will refresh tokens every 10 seconds (3 times) then exit...\n',
+  );
+}
+
+/// Generate a mock JWT token for demonstration
+String generateMockJwtToken() {
+  final random = Random();
+  final chars =
+      'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+  // Generate mock JWT structure: header.payload.signature
+  final header = List.generate(
+    20,
+    (index) => chars[random.nextInt(chars.length)],
+  ).join();
+  final payload = List.generate(
+    30,
+    (index) => chars[random.nextInt(chars.length)],
+  ).join();
+  final signature = List.generate(
+    25,
+    (index) => chars[random.nextInt(chars.length)],
+  ).join();
+
+  return '$header.$payload.$signature';
 }

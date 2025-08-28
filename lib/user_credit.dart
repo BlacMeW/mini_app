@@ -23,7 +23,23 @@ class User {
   final String name;
   final int userid;
   int creditPoints;
+  String? _jwtToken;
+
   User({required this.name, required this.userid, this.creditPoints = 0});
+
+  /// Set JWT token for the user
+  void setToken(String jwtToken) {
+    if (jwtToken.trim().isEmpty) {
+      throw ArgumentError('JWT token cannot be empty');
+    }
+    _jwtToken = jwtToken.trim();
+  }
+
+  /// Get JWT token for the user
+  String? get token => _jwtToken;
+
+  /// Check if user has a token set
+  bool get hasToken => _jwtToken != null && _jwtToken!.isNotEmpty;
 }
 
 class RegisterUserWidget extends StatefulWidget {

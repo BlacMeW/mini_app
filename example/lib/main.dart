@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mini_app/user_credit.dart';
 import 'dart:math';
+import 'dart:async';
 
 void main() => runApp(const DemoApp());
 
@@ -22,6 +23,98 @@ class _DemoAppState extends State<DemoApp> {
       TextEditingController();
   final TextEditingController getUserIdController = TextEditingController();
   String userInfoResult = '';
+  Timer? _tokenRefreshTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    // Start token refresh timer after a short delay to ensure users are loaded
+    Timer(Duration(seconds: 3), () {
+      _startTokenRefreshTimer();
+    });
+  }
+
+  @override
+  void dispose() {
+    _tokenRefreshTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startTokenRefreshTimer() {
+    // Set initial tokens
+    refreshOneUserToken();
+
+    // Start 1-hour periodic timer
+    _tokenRefreshTimer = Timer.periodic(Duration(hours: 1), (timer) {
+      refreshOneUserToken();
+    });
+
+    print('Token refresh timer started - tokens will be refreshed every hour');
+  }
+
+  void _refreshAllUserTokens() {
+    if (userKey.currentState != null) {
+      final users = userKey.currentState!.users;
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+
+      for (int i = 0; i < users.length; i++) {
+        final newToken = _generateJwtToken(users[i].userid, timestamp);
+        try {
+          users[i].setToken(newToken);
+          print(
+            'Refreshed token for ${users[i].name} (ID: ${users[i].userid})',
+          );
+        } catch (e) {
+          print('Error refreshing token for ${users[i].name}: $e');
+        }
+      }
+
+      print('Token refresh completed at ${DateTime.now()}');
+    }
+  }
+
+  void refreshOneUserToken() {
+    if (userKey.currentState != null) {
+      final users = userKey.currentState!.users;
+      if (users.isNotEmpty) {
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final newToken = _generateJwtToken(users[0].userid, timestamp);
+        try {
+          users[0].setToken(newToken);
+          print(
+            'Refreshed token for user[0]: ${users[0].name} (ID: ${users[0].userid})',
+          );
+          print('New token: ${newToken.substring(0, 25)}...');
+        } catch (e) {
+          print('Error refreshing token for user[0] ${users[0].name}: $e');
+        }
+      } else {
+        print('No users available to refresh token for user[0]');
+      }
+    }
+  }
+
+  String _generateJwtToken(int userId, int timestamp) {
+    final random = Random();
+    final chars =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+    // Generate mock JWT structure: header.payload.signature
+    final header = List.generate(
+      16,
+      (index) => chars[random.nextInt(chars.length)],
+    ).join();
+    final payload = List.generate(
+      24,
+      (index) => chars[random.nextInt(chars.length)],
+    ).join();
+    final signature = List.generate(
+      20,
+      (index) => chars[random.nextInt(chars.length)],
+    ).join();
+
+    return '$header.$payload.$signature.uid$userId.ts$timestamp';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +138,35 @@ class _DemoAppState extends State<DemoApp> {
                       color: Colors.blue,
                     ),
                   ),
+                ),
+              ),
+              // Token refresh status
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(8.0),
+                margin: const EdgeInsets.only(bottom: 16.0),
+                decoration: BoxDecoration(
+                  color: Colors.green[50],
+                  border: Border.all(color: Colors.green),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  '🔄 Auto Token Refresh: Active (Every 1 hour)\n'
+                  '📝 Check console for refresh logs',
+                  style: TextStyle(fontSize: 12, color: Colors.green[700]),
+                ),
+              ),
+              // Manual token refresh button for user[0]
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 16.0),
+                child: ElevatedButton(
+                  onPressed: refreshOneUserToken,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('🔑 Refresh Token for User[0]'),
                 ),
               ),
               // UI to call addUser
