@@ -24,8 +24,27 @@ class User {
   final int userid;
   int creditPoints;
   String? _jwtToken;
+  String? firstName;
+  String? lastName;
 
   User({required this.name, required this.userid, this.creditPoints = 0});
+
+  /// Set first name and last name for the user
+  void setName(String firstname, String lastname) {
+    if (firstname.trim().isEmpty || lastname.trim().isEmpty) {
+      throw ArgumentError('First name and last name cannot be empty');
+    }
+    firstName = firstname.trim();
+    lastName = lastname.trim();
+  }
+
+  /// Get full name combining first name and last name
+  String? get fullName {
+    if (firstName != null && lastName != null) {
+      return '$firstName $lastName';
+    }
+    return null;
+  }
 
   /// Set JWT token for the user
   void setToken(String jwtToken) {

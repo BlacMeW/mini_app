@@ -155,32 +155,28 @@ const like = 'sample';
 
 ## Additional information
 
-This library provides sample code for JWT token management patterns. For production use, integrate with Firebase Authentication or your preferred authentication service.
+This library provides sample code for JWT token management patterns. For production use, integrate with your preferred authentication service.
 
-### 🔥 Firebase JWT Integration
+### � JWT Token Integration
 
-This mini app is designed to work with **Firebase JWT Tokens** for production environments:
+This mini app is designed to work with **JWT Tokens** from any authentication service:
 
 ```dart
-// Production example with Firebase
-import 'package:firebase_auth/firebase_auth.dart';
+// Production example with JWT token
 import 'package:mini_app/user_credit.dart';
 
-Future<void> setFirebaseToken(User user) async {
-  final firebaseUser = FirebaseAuth.instance.currentUser;
-  if (firebaseUser != null) {
-    final idToken = await firebaseUser.getIdToken();
-    user.setToken(idToken);
-  }
+Future<void> setUserToken(User user, String jwtToken) async {
+  // Set the JWT token obtained from your authentication service
+  user.setToken(jwtToken);
 }
 ```
 
 ### ⚠️ Important Note
 
 **The token examples in this library are for demonstration purposes only.** In production:
-- Use actual Firebase JWT tokens from Firebase Authentication
+- Use actual JWT tokens from your authentication service
 - Implement proper token validation and security measures  
 - Follow JWT security best practices
 - Never log actual token values
 
-For complete documentation and Firebase integration examples, see [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md).
+For complete documentation and integration examples, see [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md).

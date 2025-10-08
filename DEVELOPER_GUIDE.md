@@ -101,6 +101,8 @@ class User {
   final int userid;           // Unique user identifier  
   int creditPoints;           // User's credit balance
   String? _jwtToken;          // Private JWT token storage
+  String? firstName;          // User's first name (optional)
+  String? lastName;           // User's last name (optional)
   
   User({
     required this.name, 
@@ -112,6 +114,10 @@ class User {
   void setToken(String jwtToken);    // Set user's JWT token
   String? get token;                 // Get current token
   bool get hasToken;                 // Check if token exists
+  
+  // Name management methods
+  void setName(String firstname, String lastname);  // Set first and last name
+  String? get fullName;              // Get combined full name
 }
 ```
 
@@ -181,6 +187,104 @@ try {
 } catch (e) {
   print('Error: $e'); // ArgumentError: JWT token cannot be empty
 }
+```
+
+### 👤 setName Function
+
+The name management function for setting user's first and last names with validation.
+
+#### **Method Signature**
+```dart
+void setName(String firstname, String lastname)
+```
+
+#### **Parameters**
+- `firstname` (String): The user's first name (cannot be empty)
+- `lastname` (String): The user's last name (cannot be empty)
+
+#### **Behavior**
+- ✅ Validates both names are not empty or whitespace-only
+- 🔄 Trims whitespace from both names
+- 💾 Stores first name and last name in user object
+- 🎯 Enables `fullName` getter access
+- ❌ Throws `ArgumentError` for invalid names
+
+#### **Usage Examples**
+
+##### Basic Usage
+```dart
+final user = registerUser('John Doe', userid: 1234);
+
+// Set first and last names
+user.setName('John', 'Doe');
+
+// Access the properties
+print('First Name: ${user.firstName}');  // Output: John
+print('Last Name: ${user.lastName}');    // Output: Doe
+print('Full Name: ${user.fullName}');    // Output: John Doe
+```
+
+##### Complete Example
+```dart
+// Create user
+final user = registerUser('Alice Johnson', userid: 5678);
+
+// Set names
+user.setName('Alice', 'Johnson');
+
+// Use in your application
+print('User Profile:');
+print('  Display Name: ${user.name}');        // Alice Johnson
+print('  First Name: ${user.firstName}');     // Alice
+print('  Last Name: ${user.lastName}');       // Johnson
+print('  Full Name: ${user.fullName}');       // Alice Johnson
+print('  User ID: ${user.userid}');           // 5678
+```
+
+##### Error Handling
+```dart
+try {
+  user.setName('', 'Doe'); // Empty first name
+} catch (e) {
+  print('Error: $e'); // ArgumentError: First name and last name cannot be empty
+}
+
+try {
+  user.setName('John', '   '); // Whitespace last name
+} catch (e) {
+  print('Error: $e'); // ArgumentError: First name and last name cannot be empty
+}
+
+try {
+  user.setName('', ''); // Both empty
+} catch (e) {
+  print('Error: $e'); // ArgumentError: First name and last name cannot be empty
+}
+```
+
+##### Real-World Integration
+```dart
+// Form submission example
+void submitUserForm(String displayName, String firstName, String lastName, int userId) {
+  final user = registerUser(displayName, userid: userId);
+  
+  try {
+    // Set structured name data
+    user.setName(firstName, lastName);
+    
+    // Set authentication token
+    user.setToken(fetchAuthToken());
+    
+    print('✅ User registered successfully');
+    print('   Name: ${user.fullName}');
+    print('   Token: ${user.hasToken ? "Set" : "Not set"}');
+  } catch (e) {
+    print('❌ Registration failed: $e');
+  }
+}
+
+// Usage
+submitUserForm('John Doe', 'John', 'Doe', 1001);
 ```
 
 ### ⏱️ Automatic Token Refresh
@@ -323,6 +427,49 @@ bool get hasToken
 ```
 
 **Returns:** `bool` (true if token exists and not empty)
+
+### 👤 Name Management Methods
+
+#### `setName()`
+Sets the first name and last name for a user with validation.
+
+```dart
+void setName(String firstname, String lastname)
+```
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `firstname` | String | ✅ | User's first name |
+| `lastname` | String | ✅ | User's last name |
+
+**Throws:** `ArgumentError` if either name is empty
+
+#### `firstName` (property)
+Gets the user's first name.
+
+```dart
+String? firstName
+```
+
+**Returns:** `String?` (null if not set via `setName()`)
+
+#### `lastName` (property)
+Gets the user's last name.
+
+```dart
+String? lastName
+```
+
+**Returns:** `String?` (null if not set via `setName()`)
+
+#### `fullName` (getter)
+Gets the combined first and last name.
+
+```dart
+String? get fullName
+```
+
+**Returns:** `String?` (formatted as "FirstName LastName", null if names not set)
 
 ---
 
@@ -530,7 +677,160 @@ class _QuickStartAppState extends State<QuickStartApp> {
 }
 ```
 
-### 🔄 Production Token Management
+### � User Name Management
+
+```dart
+import 'package:mini_app/user_credit.dart';
+
+void demonstrateNameManagement() {
+  // Create a user
+  final user = registerUser('John Doe', userid: 1001, creditPoints: 150);
+  
+  print('Initial state:');
+  print('  Display Name: ${user.name}');          // John Doe
+  print('  First Name: ${user.firstName}');       // null
+  print('  Last Name: ${user.lastName}');         // null
+  print('  Full Name: ${user.fullName}');         // null
+  
+  // Set first and last names
+  user.setName('John', 'Doe');
+  
+  print('\nAfter setName():');
+  print('  Display Name: ${user.name}');          // John Doe
+  print('  First Name: ${user.firstName}');       // John
+  print('  Last Name: ${user.lastName}');         // Doe
+  print('  Full Name: ${user.fullName}');         // John Doe
+  
+  // Use in forms or API calls
+  final userData = {
+    'display_name': user.name,
+    'first_name': user.firstName,
+    'last_name': user.lastName,
+    'full_name': user.fullName,
+    'user_id': user.userid,
+    'credits': user.creditPoints,
+  };
+  
+  print('\nUser Data for API:');
+  print(userData);
+}
+```
+
+### 🎯 Complete User Profile Example
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:mini_app/user_credit.dart';
+
+class UserProfileExample extends StatefulWidget {
+  @override
+  State<UserProfileExample> createState() => _UserProfileExampleState();
+}
+
+class _UserProfileExampleState extends State<UserProfileExample> {
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
+  User? _currentUser;
+  
+  void _createUserProfile() {
+    final firstName = _firstNameController.text.trim();
+    final lastName = _lastNameController.text.trim();
+    
+    if (firstName.isEmpty || lastName.isEmpty) {
+      _showError('Please enter both first and last name');
+      return;
+    }
+    
+    try {
+      // Create user with combined name
+      final displayName = '$firstName $lastName';
+      final user = registerUser(displayName, userid: DateTime.now().millisecondsSinceEpoch);
+      
+      // Set structured names
+      user.setName(firstName, lastName);
+      
+      // Set authentication token (from your auth service)
+      user.setToken('your-jwt-token-here');
+      
+      setState(() {
+        _currentUser = user;
+      });
+      
+      print('✅ User profile created successfully');
+      print('   Name: ${user.fullName}');
+      print('   Token: ${user.hasToken ? "✓" : "✗"}');
+      
+    } catch (e) {
+      _showError('Failed to create profile: $e');
+    }
+  }
+  
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('User Profile')),
+      body: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          children: [
+            TextField(
+              controller: _firstNameController,
+              decoration: InputDecoration(
+                labelText: 'First Name',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 16),
+            TextField(
+              controller: _lastNameController,
+              decoration: InputDecoration(
+                labelText: 'Last Name',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _createUserProfile,
+              child: Text('Create Profile'),
+            ),
+            if (_currentUser != null) ...[
+              SizedBox(height: 32),
+              Card(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Profile Created:',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold)),
+                      SizedBox(height: 8),
+                      Text('Display Name: ${_currentUser!.name}'),
+                      Text('First Name: ${_currentUser!.firstName}'),
+                      Text('Last Name: ${_currentUser!.lastName}'),
+                      Text('Full Name: ${_currentUser!.fullName}'),
+                      Text('User ID: ${_currentUser!.userid}'),
+                      Text('Has Token: ${_currentUser!.hasToken ? "Yes" : "No"}'),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+### �🔄 Production Token Management
 
 ```dart
 class ProductionTokenManager {
@@ -910,63 +1210,44 @@ For issues, questions, or feature requests:
 > - Use production-grade JWT libraries for token handling
 > - Follow security best practices for token storage and transmission
 
-### 🔥 **Firebase JWT Integration**
+### � **JWT Token Integration**
 
-This mini app is designed to work with **Firebase JWT Tokens** for production use:
+This mini app is designed to work with **JWT Tokens** from any authentication service for production use:
 
-#### **Firebase Authentication Setup**
+#### **JWT Authentication Setup**
 ```dart
-// Production Firebase JWT implementation
-import 'package:firebase_auth/firebase_auth.dart';
+// Production JWT token implementation
+import 'package:mini_app/user_credit.dart';
 
-class FirebaseTokenManager {
-  static Future<void> setUserToken(User user) async {
+class TokenManager {
+  static Future<void> setUserToken(User user, String jwtToken) async {
     try {
-      final firebaseUser = FirebaseAuth.instance.currentUser;
-      if (firebaseUser != null) {
-        final idToken = await firebaseUser.getIdToken();
-        user.setToken(idToken);
-        print('✅ Firebase JWT token set for ${user.name}');
-      }
+      user.setToken(jwtToken);
+      print('✅ JWT token set for ${user.name}');
     } catch (e) {
-      print('❌ Firebase token error: $e');
+      print('❌ Token error: $e');
     }
   }
   
-  static Future<void> refreshFirebaseTokens(List<User> users) async {
-    final firebaseUser = FirebaseAuth.instance.currentUser;
-    if (firebaseUser != null) {
-      try {
-        final idToken = await firebaseUser.getIdToken(true); // Force refresh
-        for (final user in users) {
-          user.setToken(idToken);
-        }
-        print('✅ Firebase tokens refreshed for ${users.length} users');
-      } catch (e) {
-        print('❌ Firebase token refresh error: $e');
+  static Future<void> refreshTokens(List<User> users, Future<String> Function() fetchToken) async {
+    try {
+      final newToken = await fetchToken();
+      for (final user in users) {
+        user.setToken(newToken);
       }
+      print('✅ Tokens refreshed for ${users.length} users');
+    } catch (e) {
+      print('❌ Token refresh error: $e');
     }
   }
 }
 ```
 
-#### **Required Dependencies**
-```yaml
-dependencies:
-  firebase_core: ^2.24.2
-  firebase_auth: ^4.15.3
-  mini_app:
-    git:
-      url: https://github.com/BlacMeW/mini_app.git
-      ref: main
-```
-
-#### **Firebase Integration Example**
+#### **Token Integration Example**
 ```dart
-// Initialize Firebase and set up token management
+// Initialize and set up token management
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
   runApp(MyApp());
 }
 
@@ -981,23 +1262,29 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    _setupFirebaseTokenRefresh();
+    _setupTokenRefresh();
   }
   
-  void _setupFirebaseTokenRefresh() {
-    // Firebase tokens typically expire in 1 hour
+  void _setupTokenRefresh() {
+    // JWT tokens typically expire in 1 hour
     _tokenRefreshTimer = Timer.periodic(Duration(minutes: 50), (timer) {
-      FirebaseTokenManager.refreshFirebaseTokens(userList);
+      TokenManager.refreshTokens(userList, fetchTokenFromAuthService);
     });
+  }
+  
+  Future<String> fetchTokenFromAuthService() async {
+    // Implement your authentication service token fetching logic here
+    // This could be from OAuth, custom auth server, etc.
+    return await yourAuthService.getToken();
   }
 }
 ```
 
 ### 🛡️ **Security Considerations**
 
-When implementing with Firebase JWT tokens:
+When implementing with JWT tokens:
 
-- ✅ **Use Firebase Auth's built-in token refresh mechanism**
+- ✅ **Use your authentication service's built-in token refresh mechanism**
 - ✅ **Validate tokens on your backend server**
 - ✅ **Implement proper error handling for expired tokens**
 - ✅ **Use HTTPS for all token transmissions**
@@ -1007,32 +1294,26 @@ When implementing with Firebase JWT tokens:
 
 ### 📞 **Production Support**
 
-For production implementations with Firebase:
+For production implementations:
 
-- 📚 [Firebase Auth Documentation](https://firebase.google.com/docs/auth)
-- 🔗 [Flutter Firebase Setup Guide](https://firebase.google.com/docs/flutter/setup)
-- 🛡️ [JWT Security Best Practices](https://auth0.com/blog/a-look-at-the-latest-draft-for-jwt-bcp/)
+- ️ [JWT Security Best Practices](https://auth0.com/blog/a-look-at-the-latest-draft-for-jwt-bcp/)
+- 📚 [JWT.io Documentation](https://jwt.io/introduction)
 
 ---
 
-## 📢 Footer: Firebase JWT Token Integration
+## 📢 Footer: JWT Token Integration
 
-This mini app is designed to work with Firebase JWT tokens for secure authentication in production environments. The `setToken` function allows you to store the Firebase JWT token in your user model.
+This mini app is designed to work with JWT tokens from any authentication service for secure authentication in production environments. The `setToken` function allows you to store JWT tokens in your user model.
 
-### 🔥 Example: Setting Firebase JWT Token
+### � Example: Setting JWT Token
 
 ```dart
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mini_app/user_credit.dart';
 
-Future<void> setFirebaseTokenForMiniApp(User user) async {
-  final firebaseUser = FirebaseAuth.instance.currentUser;
-  if (firebaseUser != null) {
-    final idToken = await firebaseUser.getIdToken();
-    user.setToken(idToken); // Store Firebase JWT token in mini app user
-    print('✅ Firebase JWT token set for ${user.name}');
-  }
+Future<void> setTokenForUser(User user, String jwtToken) async {
+  user.setToken(jwtToken); // Store JWT token in mini app user
+  print('✅ JWT token set for ${user.name}');
 }
 ```
 
-> **Note:** Always use real Firebase JWT tokens in production. The setToken function in this library is designed to work seamlessly with Firebase Authentication.
+> **Note:** Always use real JWT tokens from your authentication service in production. The setToken function in this library is designed to work with any JWT-based authentication system.
